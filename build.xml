@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="NexusVisualizer" default="all" basedir=".">
+    <property name="srcdir" value="src/main/java/" />
+    <property name="packagename" value="nexusviz" />
+    <property name="libdir" value="./lib/" />
+    <property name="javaparser-core" value="javaparser-core-3.27.0.jar" />
+    <property name="javaparser-symbol-solver" value="javaparser-symbol-solver-core-3.27.0.jar" />
+    <property name="puml" value="plantuml-asl-1.2025.7.jar" />
+    <property name="mvc" value="mvc.jar" />
+    <property name="guava" value="guava-33.5.0-jre.jar" />
+    <property name="javassist" value="javassist-3.30.2-GA.jar" />
+    <property name="packagenames" value="${packagename}.*" />
+    <property name="jars" value="${javaparser-core},${javaparser-symbol-solver},${puml},${mvc},${guava},${javassist}" />
+    <property name="destdir" value="./Classes" />
+    <property name="docdir" value="./JavaDoc" />
+    <property name="installdir" value="./${ant.project.name}.app/Contents/Resources/Java" />
+    <property name="doc-title" value="すべてのクラスおよびインタフェース" />
+    <property name="copyright" value="Copyright 2025 Ishiguro Suguru. All Rights Reserved." />
+    <property name="zipname" value="${ant.project.name}" />
+
+    <path id="classpath">
+        <pathelement location="${basedir}" />
+        <fileset dir="${libdir}" includes="${jars}" />
+    </path>
+
+    <target name="all" depends="jar" description="build all">
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="prepare" depends="" description="prepare to compile">
+        <mkdir dir="${destdir}" />
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="compile" depends="prepare" description="compile all sources">
+        <javac fork="true" srcdir="${srcdir}" destdir="${destdir}" includeAntRuntime="true" encoding="UTF-8" deprecation="on" verbose="false">
+            <compilerarg value="-J-Dfile.encoding=UTF8" />
+            <compilerarg value="-Xlint:all" />
+            <compilerarg value="-Xlint:-path" />
+            <classpath refid="classpath" />
+        </javac>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="jar" depends="compile" description="make jar file">
+        <jar jarfile="${ant.project.name}.jar" basedir="${destdir}" manifest="${ant.project.name}.mf">
+            <zipgroupfileset dir="${libdir}" includes="${jars}" />
+        </jar>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="clean" description="cleaning">
+        <delete dir="${destdir}" />
+        <delete file="${ant.project.name}.jar" />
+        <delete dir="${docdir}" />
+        <delete dir="${installdir}" />
+        <delete verbose="true">
+            <fileset dir="${srcdir}/${packagename}" includes="*.class" />
+        </delete>
+        <delete verbose="true">
+            <fileset dir="${basedir}" includes="output*diagram.png, output*diagram.puml" />
+        </delete>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="test" depends="all" description="test">
+        <exec executable="java" spawn="false">
+            <arg line="-Dfile.encoding=UTF-8 -Xmx512m -Xss1024k -jar ${ant.project.name}.jar" />
+        </exec>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="install" depends="all" description="install into application">
+        <copy file="${ant.project.name}.jar" todir="${installdir}" />
+        <exec executable="chmod">
+            <arg line="755 ${installdir}/../../MacOS/applet" />
+        </exec>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="doc" depends="all" description="make document (javadoc)">
+        <mkdir dir="${docdir}" />
+        <javadoc sourcepath="${srcdir}" locale="ja_JP" destdir="${docdir}" packagenames="${packagenames}" author="true" version="true" charset="UTF-8" encoding="UTF-8" docencoding="UTF-8" linksource="yes" additionalparam="-J-Dfile.encoding=UTF-8 -Xdoclint:all" access="private">
+            <fileset dir="${basedir}/${srcdir}/${packagename}" defaultexcludes="yes"></fileset>
+            <doctitle>${doc-title}</doctitle>
+            <bottom>${copyright}</bottom>
+            <classpath refid="classpath" />
+        </javadoc>
+        <exec executable="open">
+            <arg line="-a 'Safari' ${docdir}/index.html" />
+        </exec>
+        <exec executable="date" spawn="false" />
+    </target>
+
+    <target name="zip" depends="clean" description="make zip file">
+        <delete file="../${zipname}.zip" />
+        <zip destfile="../${zipname}.zip">
+            <zipfileset dir="${basedir}" prefix="${zipname}" />
+        </zip>
+        <exec executable="date" spawn="false" />
+    </target>
+</project>
